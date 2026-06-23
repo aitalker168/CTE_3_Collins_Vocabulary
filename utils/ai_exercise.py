@@ -5,39 +5,43 @@ import base64
 import streamlit as st
 from utils.database import get_connection
 
-# 固定使用 GitHub Models（无需用户配置）
-GITHUB_MODELS_BASE_URL = "https://models.inference.ai.azure.com"
-GITHUB_MODELS_MODEL = "gpt-4o"  # GitHub Models 默认分配
+# GitHub Models 的正确端点
+GITHUB_CHAT_COMPLETIONS_URL = "https://api.github.com/chat/completions"
+# 可用的模型（可根据需要调整）
+CHAT_MODEL = "gpt-4o"
 
 def generate_exercises(word: str, translation: str, synonyms: list,
                        github_token: str) -> list:
     """
     使用 GitHub Token 调用 GitHub Models 生成5道练习题。
+    要求 AI 同时输出中文翻译。
     """
     syn_text = "、".join(synonyms) if synonyms else "无"
-    prompt = f"""你是一位英语词汇老师。请根据以下单词生成5道练习题（可以是填空或选择题），同时给出正确答案。题目和答案必须用中文说明。
+    # 增强 prompt，明确要求中文翻译和答案
+    prompt = f"""你是一位英语词汇老师。请根据以下单词生成5道练习题（可以是填空或选择题），同时给出正确答案和中文翻译。
 单词：{word}
 中文释义：{translation}
 同义词：{syn_text}
 要求：
+- 每道题必须包含中文翻译
 - 题目类型可混合：选择题或填空题
-- 每道题包含题干、选项（如果是选择）、正确答案
+- 每道题包含题干、选项（如果是选择）、正确答案、中文翻译
 - 答案必须明确给出
-- 以JSON数组格式返回，每个元素包含字段：question（题干）, type（"choice"或"fill"）, options（列表，选择题时提供）, answer（正确答案）"""
+- 以JSON数组格式返回，每个元素包含字段：question（题干）, type（"choice"或"fill"）, options（列表，选择题时提供）, answer（正确答案）, chinese_translation（中文翻译）"""
 
     headers = {
         "Authorization": f"Bearer {github_token}",
         "Content-Type": "application/json"
     }
     payload = {
-        "model": GITHUB_MODELS_MODEL,
+        "model": CHAT_MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.7,
         "max_tokens": 2000
     }
 
     try:
-        resp = requests.post(f"{GITHUB_MODELS_BASE_URL}/v1/chat/completions",
+        resp = requests.post(GITHUB_CHAT_COMPLETIONS_URL,
                               headers=headers, json=payload, timeout=30)
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"]
