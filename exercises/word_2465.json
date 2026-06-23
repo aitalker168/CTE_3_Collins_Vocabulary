@@ -1,0 +1,52 @@
+[
+  {
+    "question": "选择正确的句子来表达：'我能帮你做任何事。'",
+    "type": "choice",
+    "options": [
+      "I can help you do anything.",
+      "I can help you do something.",
+      "I can help you do everything.",
+      "I can help you do nothing."
+    ],
+    "answer": "I can help you do anything.",
+    "chinese_translation": "正确答案是：我能帮你做任何事。"
+  },
+  {
+    "question": "填空：If you need ______, just let me know.",
+    "type": "fill",
+    "options": [],
+    "answer": "anything",
+    "chinese_translation": "如果你需要什么，只要告诉我。"
+  },
+  {
+    "question": "选择正确的句子：Which sentence uses 'anything' correctly?",
+    "type": "choice",
+    "options": [
+      "Do you want anything to eat?",
+      "Do you want everything to eat?",
+      "Do you want nothing to eat?",
+      "Do you want something to eat?"
+    ],
+    "answer": "Do you want anything to eat?",
+    "chinese_translation": "正确答案是：你想吃点什么吗？"
+  },
+  {
+    "question": "填空：She didn't say ______ about the problem.",
+    "type": "fill",
+    "options": [],
+    "answer": "anything",
+    "chinese_translation": "她没有说任何关于这个问题的事情。"
+  },
+  {
+    "question": "选择正确的翻译：'Is there anything I can do to help?'",
+    "type": "choice",
+    "options": [
+      "有什么我可以做来帮忙的吗？",
+      "有没有东西我不能做？",
+      "所有的事情我都可以做！",
+      "我不需要帮忙。"
+    ],
+    "answer": "有什么我可以做来帮忙的吗？",
+    "chinese_translation": "正确答案是：有什么我可以做来帮忙的吗？"
+  }
+]
