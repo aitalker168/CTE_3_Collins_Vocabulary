@@ -1,3 +1,4 @@
+# pages/1_Study.py
 import streamlit as st
 import streamlit.components.v1 as components
 import json
@@ -19,7 +20,6 @@ from utils import ai_exercise as ai
 st.set_page_config(page_title="学习", page_icon="📖", layout="wide")
 
 def is_cloud():
-    """检测是否运行在 Streamlit Cloud"""
     return os.environ.get("IS_STREAMLIT_CLOUD", "false") == "true" or \
            os.path.exists("/home/appuser")
 
@@ -83,6 +83,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# 页头
 col1, col2, col3 = st.columns([3, 1, 1])
 with col1:
     display_level = level if level != "全部" else "全部级别"
@@ -99,6 +100,7 @@ with col3:
     st.markdown(f"<span style='color:#94a3b8'>显示 {start_idx+1}-{end_idx} / 共 {total_words}</span>",
                 unsafe_allow_html=True)
 
+# ---------- 词汇卡片列表 ----------
 for word in page_words:
     word_id = word["word_id"]
     syns = db.get_synonyms(word_id)
@@ -139,6 +141,8 @@ for word in page_words:
                         )
                 except Exception as e:
                     st.error(f"下载失败: {e}")
+
+        # 笔记
         if st.session_state.get(f"expand_note_{word_id}", False):
             st.markdown("---")
             note_content = note["content"] if note else ""
@@ -151,7 +155,9 @@ for word in page_words:
                     gh_token = settings.get("github_token", "")
                     gh_repo = settings.get("github_repo", "")
                     if gh_token and gh_repo:
-                        success, msg = db.sync_note_to_github(word_id, new_content, gh_token, gh_repo)
+                        success, msg = db.sync_note_to_github(
+                            word_id, new_content, gh_token, gh_repo, word=word['word']
+                        )
                         if success:
                             st.success("笔记已保存并同步到GitHub")
                         else:
@@ -165,6 +171,8 @@ for word in page_words:
                 rec_path = Path(note["recording_path"])
                 if rec_path.exists():
                     st.audio(str(rec_path), format="audio/mp3")
+
+        # 同义词
         if syns:
             st.markdown("**同义词**")
             for syn in syns:
@@ -181,6 +189,8 @@ for word in page_words:
                         dict_url = settings.get("dict_url", "https://dict.youdao.com/result?word={word}&lang=en")
                         url = dict_url.format(word=syn["synonym"])
                         st.markdown(f'<a href="{url}" target="_blank">打开词典</a>', unsafe_allow_html=True)
+
+        # 练习
         col_ex = st.columns([1])
         with col_ex[0]:
             if st.button(f"🧠 练习 - {word['word']}", key=f"ex_{word_id}"):
@@ -216,6 +226,7 @@ for word in page_words:
             st.session_state[f"exercise_{word_id}"] = False
         st.markdown('</div>', unsafe_allow_html=True)
 
+# ---------- 纯听模式对话框 ----------
 if st.session_state.get("pure_listen_dialog_open", False):
     @st.dialog("🎧 纯听控制面板")
     def pure_listen_dialog():
