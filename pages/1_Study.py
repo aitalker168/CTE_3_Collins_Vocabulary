@@ -19,7 +19,6 @@ from utils import ai_exercise as ai
 st.set_page_config(page_title="学习", page_icon="📖", layout="wide")
 
 def is_cloud():
-    """检测是否运行在 Streamlit Cloud"""
     return os.environ.get("IS_STREAMLIT_CLOUD", "false") == "true" or \
            os.path.exists("/home/appuser")
 
@@ -107,7 +106,6 @@ for word in page_words:
     note = db.get_note(word_id)
     with st.container():
         st.markdown(f'<div class="vocab-card">', unsafe_allow_html=True)
-        # 注意：增加了一列（共9列）
         cols1 = st.columns([0.3, 1.5, 0.5, 0.7, 0.3, 0.3, 0.3, 0.3, 0.3])
         with cols1[0]:
             st.markdown(f"<span style='color:#94a3b8'>{word.get('word_id','')}</span>", unsafe_allow_html=True)
@@ -128,8 +126,6 @@ for word in page_words:
         with cols1[6]:
             if st.button("📝", key=f"note_{word_id}", help="笔记"):
                 st.session_state[f"expand_note_{word_id}"] = not st.session_state.get(f"expand_note_{word_id}", False)
-
-        # ===== 下载到本地 =====
         with cols1[7]:
             if st.button("📥", key=f"dl_{word_id}", help="下载MP3到本地"):
                 audio_url = f"http://dict.youdao.com/dictvoice?audio={word['word']}&type=1"
@@ -144,8 +140,6 @@ for word in page_words:
                         )
                 except Exception as e:
                     st.error(f"下载失败: {e}")
-
-        # ===== 上传到 GitHub =====
         with cols1[8]:
             gh_token = settings.get("github_token", "")
             gh_repo = settings.get("github_repo", "")
@@ -207,23 +201,28 @@ for word in page_words:
                         url = dict_url.format(word=syn["synonym"])
                         st.markdown(f'<a href="{url}" target="_blank">打开词典</a>', unsafe_allow_html=True)
 
-        # ---------- 练习 ----------
+        # ---------- 练习（关键修改：使用独立的 ai_github_token） ----------
         col_ex = st.columns([1])
         with col_ex[0]:
             if st.button(f"🧠 练习 - {word['word']}", key=f"ex_{word_id}"):
                 st.session_state[f"exercise_{word_id}"] = True
         if st.session_state.get(f"exercise_{word_id}", False):
             st.markdown("---")
-            ai_key = settings.get("github_token", "")
+            # ⬇ 这里改为读取 ai_github_token（新字段）
+            ai_key = settings.get("ai_github_token", "")
             if not ai_key:
-                st.warning("请先在Secrets中配置 GitHub Personal Access Token（将同时用于AI调用和仓库同步）")
+                st.warning("请先在设置页面配置 GitHub Token for AI（用于调用 GitHub Models 生成练习题）")
             else:
                 with st.spinner("生成练习题..."):
                     syn_words = [s["synonym"] for s in syns] if syns else []
                     questions = ai.generate_exercises(word["word"], word.get("translation", ""), syn_words, ai_key)
                 if questions:
+                    # 显示题目时，增加中文翻译显示（如果 API 返回了翻译字段）
                     for q in questions:
+                        chinese = q.get("chinese_translation", "")
                         st.markdown(f"**{q.get('question','')}**")
+                        if chinese:
+                            st.markdown(f"*中文翻译：{chinese}*")
                         if q.get("type") == "choice":
                             for opt in q.get("options", []):
                                 st.markdown(f"- {opt}")
