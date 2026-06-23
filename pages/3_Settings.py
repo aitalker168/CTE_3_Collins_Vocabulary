@@ -14,19 +14,25 @@ st.title("⚙️ 设置")
 settings = db.get_settings()
 _AUDIO_CACHE_DIR = _project_root / "audio_cache"
 
-# ------------------ 统一使用 GitHub Token ------------------
-st.markdown("### 🔑 凭据配置（统一使用 GitHub Personal Access Token）")
+# ------------------ 凭据配置 ------------------
+st.markdown("### 🔑 凭据配置")
+
+# 仓库操作 Token（用于笔记同步、上传音频）
 github_token = st.text_input(
-    "GitHub Personal Access Token",
+    "GitHub Token（用于仓库操作：笔记同步、上传音频）",
     value=settings.get("github_token", ""),
     type="password",
-    help="这个 Token 将同时用于：\n"
-         "1. 同步笔记和练习题到 GitHub 仓库\n"
-         "2. 调用 GitHub Models（AI 生成练习题，自动分配模型）\n"
-         "3. 上传音频文件到 GitHub raw"
+    help="Classic Token 或 Fine-grained Token，需有 repo 和 contents: write 权限"
 )
 
-# ------------------ GitHub 仓库配置 ------------------
+# 新增：专用 AI Token（用于生成练习题）
+ai_github_token = st.text_input(
+    "GitHub Token for AI（用于调用 GitHub Models 生成练习题）",
+    value=settings.get("ai_github_token", ""),
+    type="password",
+    help="Classic Token，只需 read:user 权限即可；或任何可调用 GitHub Models 的 Token"
+)
+
 st.markdown("### 📦 GitHub 仓库配置")
 github_repo = st.text_input(
     "GitHub 仓库（格式：用户名/仓库名）",
@@ -110,6 +116,7 @@ if st.button("导出笔记"):
 # ------------------ 保存按钮 ------------------
 if st.button("保存所有设置", type="primary"):
     db.set_setting("github_token", github_token)
+    db.set_setting("ai_github_token", ai_github_token)  # 新增
     db.set_setting("github_repo", github_repo)
     db.set_setting("audio_raw_base", audio_raw_base)
     db.set_setting("audio_scan_dir", audio_scan_dir)
