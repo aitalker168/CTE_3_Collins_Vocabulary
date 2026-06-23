@@ -1,0 +1,47 @@
+[
+  {
+    "question": "1. The magician will ___ on the stage in a few seconds.",
+    "type": "fill",
+    "options": [],
+    "answer": "appear",
+    "chinese_translation": "魔术师将在几秒钟后出现在舞台上。"
+  },
+  {
+    "question": "2. What does the word 'appear' mean?",
+    "type": "choice",
+    "options": [
+      "A. 消失",
+      "B. 出现",
+      "C. 改变",
+      "D. 离开"
+    ],
+    "answer": "B",
+    "chinese_translation": "单词 'appear' 的意思是什么？"
+  },
+  {
+    "question": "3. It seems to ___ that he is not interested in the project.",
+    "type": "fill",
+    "options": [],
+    "answer": "appear",
+    "chinese_translation": "似乎他对这个项目不感兴趣。"
+  },
+  {
+    "question": "4. Which sentence uses the word 'appear' correctly?",
+    "type": "choice",
+    "options": [
+      "A. She appear happy even when she's sad.",
+      "B. The stars appear in the sky at night.",
+      "C. He was appear on time for the meeting.",
+      "D. Could you appear me the book on the shelf?"
+    ],
+    "answer": "B",
+    "chinese_translation": "以下哪句正确使用了单词 'appear'？"
+  },
+  {
+    "question": "5. The first signs of spring usually ___ in March.",
+    "type": "fill",
+    "options": [],
+    "answer": "appear",
+    "chinese_translation": "春天的第一个迹象通常在三月出现。"
+  }
+]
