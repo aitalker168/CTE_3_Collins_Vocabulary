@@ -1,0 +1,52 @@
+[
+  {
+    "question": "Fill in the blank: I was very tired, ___ I decided to take a nap.",
+    "type": "fill",
+    "options": [],
+    "answer": "so",
+    "chinese_translation": "填空：我非常累，___ 我决定小睡一会儿。"
+  },
+  {
+    "question": "Choose the correct option to complete the sentence: She was hungry, ___ she ate the entire pizza.",
+    "type": "choice",
+    "options": [
+      "but",
+      "so",
+      "or",
+      "because"
+    ],
+    "answer": "so",
+    "chinese_translation": "选择正确的选项完成句子：她很饿，___ 她吃了整块披萨。"
+  },
+  {
+    "question": "Which sentence correctly uses the word 'so'?",
+    "type": "choice",
+    "options": [
+      "I feel so happy to see you!",
+      "It was raining, so I forgot my umbrella.",
+      "I don't like chocolate, so I will eat it.",
+      "He is tired, so he goes to play football."
+    ],
+    "answer": "I feel so happy to see you!",
+    "chinese_translation": "哪句话正确使用了单词 'so'？"
+  },
+  {
+    "question": "Fill in the blank: It's getting late, ___ we should leave now.",
+    "type": "fill",
+    "options": [],
+    "answer": "so",
+    "chinese_translation": "填空：天色已晚，___ 我们应该走了。"
+  },
+  {
+    "question": "Choose the best translation for the sentence: 'I was busy, so I couldn't attend the meeting.'",
+    "type": "choice",
+    "options": [
+      "我很忙，所以我不能参加会议。",
+      "我很忙，那么我就参加了会议。",
+      "我很忙，十分想参加会议。",
+      "我很忙，非常喜欢参加会议。"
+    ],
+    "answer": "我很忙，所以我不能参加会议。",
+    "chinese_translation": "选择句子的最佳翻译：'I was busy, so I couldn't attend the meeting.'"
+  }
+]
