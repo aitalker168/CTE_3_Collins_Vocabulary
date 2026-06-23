@@ -1,4 +1,3 @@
-# pages/1_Study.py
 import streamlit as st
 import streamlit.components.v1 as components
 import json
@@ -20,6 +19,7 @@ from utils import ai_exercise as ai
 st.set_page_config(page_title="学习", page_icon="📖", layout="wide")
 
 def is_cloud():
+    """检测是否运行在 Streamlit Cloud"""
     return os.environ.get("IS_STREAMLIT_CLOUD", "false") == "true" or \
            os.path.exists("/home/appuser")
 
@@ -107,7 +107,8 @@ for word in page_words:
     note = db.get_note(word_id)
     with st.container():
         st.markdown(f'<div class="vocab-card">', unsafe_allow_html=True)
-        cols1 = st.columns([0.3, 1.5, 0.5, 0.7, 0.3, 0.3, 0.3, 0.3])
+        # 注意：增加了一列（共9列）
+        cols1 = st.columns([0.3, 1.5, 0.5, 0.7, 0.3, 0.3, 0.3, 0.3, 0.3])
         with cols1[0]:
             st.markdown(f"<span style='color:#94a3b8'>{word.get('word_id','')}</span>", unsafe_allow_html=True)
         with cols1[1]:
@@ -127,8 +128,10 @@ for word in page_words:
         with cols1[6]:
             if st.button("📝", key=f"note_{word_id}", help="笔记"):
                 st.session_state[f"expand_note_{word_id}"] = not st.session_state.get(f"expand_note_{word_id}", False)
+
+        # ===== 下载到本地 =====
         with cols1[7]:
-            if st.button("📥", key=f"dl_{word_id}", help="下载MP3"):
+            if st.button("📥", key=f"dl_{word_id}", help="下载MP3到本地"):
                 audio_url = f"http://dict.youdao.com/dictvoice?audio={word['word']}&type=1"
                 try:
                     resp = req.get(audio_url, timeout=10)
@@ -142,7 +145,21 @@ for word in page_words:
                 except Exception as e:
                     st.error(f"下载失败: {e}")
 
-        # 笔记
+        # ===== 上传到 GitHub =====
+        with cols1[8]:
+            gh_token = settings.get("github_token", "")
+            gh_repo = settings.get("github_repo", "")
+            if gh_token and gh_repo:
+                if st.button("☁️", key=f"upload_{word_id}", help="上传音频到GitHub"):
+                    success = au.upload_audio_to_github(word['word'], word['level'], gh_token, gh_repo)
+                    if success:
+                        st.success(f"已上传 {word['word']}.mp3 到 GitHub")
+                    else:
+                        st.error("上传失败，请检查网络或Token权限")
+            else:
+                st.button("☁️", disabled=True, help="请先在设置中配置GitHub Token和仓库")
+
+        # ---------- 笔记区域 ----------
         if st.session_state.get(f"expand_note_{word_id}", False):
             st.markdown("---")
             note_content = note["content"] if note else ""
@@ -172,7 +189,7 @@ for word in page_words:
                 if rec_path.exists():
                     st.audio(str(rec_path), format="audio/mp3")
 
-        # 同义词
+        # ---------- 同义词 ----------
         if syns:
             st.markdown("**同义词**")
             for syn in syns:
@@ -190,7 +207,7 @@ for word in page_words:
                         url = dict_url.format(word=syn["synonym"])
                         st.markdown(f'<a href="{url}" target="_blank">打开词典</a>', unsafe_allow_html=True)
 
-        # 练习
+        # ---------- 练习 ----------
         col_ex = st.columns([1])
         with col_ex[0]:
             if st.button(f"🧠 练习 - {word['word']}", key=f"ex_{word_id}"):
