@@ -1,47 +1,52 @@
 [
   {
-    "question": "1. The magician made the rabbit ______ out of the hat.",
-    "type": "fill",
-    "options": [],
+    "question": "选择正确的单词填空：It began to ________ that he was not telling the truth.",
+    "type": "choice",
+    "options": [
+      "appear",
+      "arrive",
+      "leave",
+      "forget"
+    ],
     "answer": "appear",
-    "chinese_translation": "1. 魔术师让兔子从帽子里出现。"
+    "chinese_translation": "开始显得他没有说实话。"
   },
   {
-    "question": "2. Which word best fits the sentence: 'She ______ to be very tired after the long journey'?",
+    "question": "选择正确的单词填空：The actor will ________ on stage at 8 PM tonight.",
+    "type": "choice",
+    "options": [
+      "appear",
+      "disappear",
+      "miss",
+      "avoid"
+    ],
+    "answer": "appear",
+    "chinese_translation": "那位演员今晚8点会登台出现。"
+  },
+  {
+    "question": "填空题：The bird suddenly ________ from behind the tree and surprised us.",
+    "type": "fill",
+    "options": [],
+    "answer": "appeared",
+    "chinese_translation": "那只鸟突然从树后出现，吓了我们一跳。"
+  },
+  {
+    "question": "选择正确的单词填空：It ________ that the weather will be sunny tomorrow.",
     "type": "choice",
     "options": [
       "appears",
-      "appearance",
-      "appeared",
-      "appearing"
+      "arrives",
+      "seems",
+      "feels"
     ],
     "answer": "appears",
-    "chinese_translation": "2. 哪个单词最适合填入句子：'长途旅行后她似乎非常疲惫。'"
+    "chinese_translation": "看起来明天天气会是晴天。"
   },
   {
-    "question": "3. The sun will ______ in the sky after the rain stops.",
+    "question": "填空题：She tried to ________ calm, but everyone could see she was nervous.",
     "type": "fill",
     "options": [],
     "answer": "appear",
-    "chinese_translation": "3. 雨停后，太阳将会出现在天空中。"
-  },
-  {
-    "question": "4. What does the word 'appear' mean in the sentence: 'He seems to appear out of nowhere'?",
-    "type": "choice",
-    "options": [
-      "to disappear",
-      "to come into sight",
-      "to make something vanish",
-      "to leave a place"
-    ],
-    "answer": "to come into sight",
-    "chinese_translation": "4. 句子中 'appear' 的含义是什么：'他似乎凭空出现。'"
-  },
-  {
-    "question": "5. Fill in the blank: 'It ______ that the meeting has been canceled.'",
-    "type": "fill",
-    "options": [],
-    "answer": "appears",
-    "chinese_translation": "5. 填空：'会议似乎已经被取消了。'"
+    "chinese_translation": "她试图表现得冷静，但每个人都能看出她很紧张。"
   }
 ]
