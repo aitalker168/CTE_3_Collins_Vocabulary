@@ -1,4 +1,4 @@
-# utils/database.py (full, corrected)
+# utils/database.py
 import sqlite3
 import os
 import json
@@ -119,9 +119,8 @@ def get_settings():
         "listen_interval": "3",
         "audio_scan_dir": str(_PROJECT_DIR / "audio_cache"),
     }
-    # 1. 从默认值开始
     settings = defaults.copy()
-    # 2. 从本地数据库读取（如果有）
+    # 从本地数据库读取
     try:
         conn = get_connection()
         rows = conn.execute("SELECT key, value FROM settings").fetchall()
@@ -130,12 +129,11 @@ def get_settings():
         conn.close()
     except Exception:
         pass
-    # 3. 从Streamlit Secrets读取（覆盖数据库和默认值）
+    # 从Streamlit Secrets读取（覆盖数据库和默认值）
     try:
         for key in defaults.keys():
             if key in st.secrets:
                 settings[key] = st.secrets[key]
-                # 云端只读，但仍需保留
     except Exception:
         pass
     return settings
@@ -146,20 +144,30 @@ def set_setting(key: str, value: str):
     conn.commit()
     conn.close()
 
-def sync_note_to_github(word_id: int, content: str, github_token: str, repo: str, branch: str = "main"):
-    note = get_note(word_id)
-    file_path = f"notes/word_{word_id}.html"
+def sync_note_to_github(word_id: int, content: str, github_token: str, repo: str, word: str = None, branch: str = "main"):
+    """
+    将笔记内容通过GitHub API提交到仓库。
+    文件名改为 notes/{word}.html，而不是 word_{id}.html。
+    """
+    if not word:
+        conn = get_connection()
+        row = conn.execute("SELECT word FROM words WHERE word_id = ?", (word_id,)).fetchone()
+        conn.close()
+        if not row:
+            return False, "Word not found"
+        word = row["word"]
+    # 清理文件名中的非法字符
+    safe_word = re.sub(r'[<>:"/\\|?*]', '_', word)
+    safe_word = safe_word.replace(' ', '_')
+    file_path = f"notes/{safe_word}.html"
     url = f"https://api.github.com/repos/{repo}/contents/{file_path}"
     headers = {"Authorization": f"token {github_token}"}
     sha = None
-    if note and note.get("github_sha"):
-        sha = note["github_sha"]
-    else:
-        r = requests.get(url, headers=headers)
-        if r.status_code == 200:
-            sha = r.json().get("sha")
+    r = requests.get(url, headers=headers)
+    if r.status_code == 200:
+        sha = r.json().get("sha")
     data = {
-        "message": f"Update note for word {word_id}",
+        "message": f"Update note for {word}",
         "content": base64.b64encode(content.encode()).decode(),
         "branch": branch
     }
