@@ -35,12 +35,10 @@ if "pure_listen_folder" not in st.session_state:
 
 _AUDIO_CACHE_DIR = _project_root / "audio_cache"
 
-# ---------- 缓存词汇数据 ----------
 @st.cache_data(ttl=60)
 def get_cached_words(level):
     return db.get_all_words(level=level, frequency=None)
 
-# ---------- 侧边栏 ----------
 st.sidebar.header("筛选")
 level = st.sidebar.selectbox(
     "格林斯级别",
@@ -51,7 +49,6 @@ level_param = None if level == "全部" else level
 words = get_cached_words(level_param)
 st.sidebar.caption(f"当前词汇量：{len(words)} 个")
 
-# 分页
 PAGE_SIZE = 20
 total_words = len(words)
 total_pages = max(1, (total_words + PAGE_SIZE - 1) // PAGE_SIZE)
@@ -77,7 +74,6 @@ start_idx = (page - 1) * PAGE_SIZE
 end_idx = min(start_idx + PAGE_SIZE, total_words)
 page_words = words[start_idx:end_idx]
 
-# 自定义样式
 st.markdown("""
 <style>
 .vocab-card { background-color: #1a1f33; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; border: 1px solid #2a2f44; }
@@ -87,7 +83,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 页头
 col1, col2, col3 = st.columns([3, 1, 1])
 with col1:
     display_level = level if level != "全部" else "全部级别"
@@ -104,7 +99,6 @@ with col3:
     st.markdown(f"<span style='color:#94a3b8'>显示 {start_idx+1}-{end_idx} / 共 {total_words}</span>",
                 unsafe_allow_html=True)
 
-# ---------- 词汇卡片列表 ----------
 for word in page_words:
     word_id = word["word_id"]
     syns = db.get_synonyms(word_id)
@@ -145,8 +139,6 @@ for word in page_words:
                         )
                 except Exception as e:
                     st.error(f"下载失败: {e}")
-
-        # 笔记
         if st.session_state.get(f"expand_note_{word_id}", False):
             st.markdown("---")
             note_content = note["content"] if note else ""
@@ -165,7 +157,7 @@ for word in page_words:
                         else:
                             st.warning(f"笔记已本地保存，GitHub同步失败：{msg}")
                     else:
-                        st.success("笔记已保存（本地）")
+                        st.success("笔记已保存（本地）。如需同步到GitHub，请在Secrets中配置github_token和github_repo。")
             with col_rec:
                 if st.button("🎙️ 录音", key=f"rec_{word_id}"):
                     st.warning("录音功能仅在本地运行可用（云端不支持）")
@@ -173,8 +165,6 @@ for word in page_words:
                 rec_path = Path(note["recording_path"])
                 if rec_path.exists():
                     st.audio(str(rec_path), format="audio/mp3")
-
-        # 同义词
         if syns:
             st.markdown("**同义词**")
             for syn in syns:
@@ -191,8 +181,6 @@ for word in page_words:
                         dict_url = settings.get("dict_url", "https://dict.youdao.com/result?word={word}&lang=en")
                         url = dict_url.format(word=syn["synonym"])
                         st.markdown(f'<a href="{url}" target="_blank">打开词典</a>', unsafe_allow_html=True)
-
-        # 练习
         col_ex = st.columns([1])
         with col_ex[0]:
             if st.button(f"🧠 练习 - {word['word']}", key=f"ex_{word_id}"):
@@ -201,7 +189,7 @@ for word in page_words:
             st.markdown("---")
             ai_key = settings.get("github_token", "")
             if not ai_key:
-                st.warning("请先在设置页面配置 GitHub Personal Access Token（将同时用于 AI 调用和仓库同步）")
+                st.warning("请先在Secrets中配置 GitHub Personal Access Token（将同时用于AI调用和仓库同步）")
             else:
                 with st.spinner("生成练习题..."):
                     syn_words = [s["synonym"] for s in syns] if syns else []
@@ -228,7 +216,6 @@ for word in page_words:
             st.session_state[f"exercise_{word_id}"] = False
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------- 纯听模式对话框 ----------
 if st.session_state.get("pure_listen_dialog_open", False):
     @st.dialog("🎧 纯听控制面板")
     def pure_listen_dialog():
@@ -238,11 +225,9 @@ if st.session_state.get("pure_listen_dialog_open", False):
                 st.session_state.pure_listen_dialog_open = False
                 st.rerun()
             return
-
         st.markdown("选择本地音频文件夹并设定播放参数。")
         audio_scan_dir = settings.get("audio_scan_dir", str(_AUDIO_CACHE_DIR))
         scan_path = st.text_input("音频文件夹路径", value=audio_scan_dir, key="pure_scan_path")
-
         if st.button("🔍 扫描此文件夹", use_container_width=True):
             p = Path(scan_path)
             if p.exists() and p.is_dir():
@@ -256,7 +241,6 @@ if st.session_state.get("pure_listen_dialog_open", False):
                 st.rerun()
             else:
                 st.error("文件夹路径不存在或无效")
-
         files = st.session_state.get("pure_listen_files", [])
         st.info(f"已扫描到 **{len(files)}** 个本地音频文件")
         if files:
@@ -268,7 +252,6 @@ if st.session_state.get("pure_listen_dialog_open", False):
                     checked = st.checkbox(f.name, value=check_dict[i], key=f"pure_check_{i}")
                     check_dict[i] = checked
                 st.session_state.pure_listen_check = check_dict
-
         if not st.session_state.get("pure_listen_playing", False) and not st.session_state.get("pure_listen_finished", False):
             col_interval, col_times = st.columns(2)
             with col_interval:
@@ -278,7 +261,6 @@ if st.session_state.get("pure_listen_dialog_open", False):
         else:
             interval = st.session_state.get("pure_listen_interval", 3)
             play_times = st.session_state.get("pure_listen_play_times", 1)
-
         if st.session_state.get("pure_listen_finished", False):
             st.success("🎉 播放完毕！")
             col_replay, col_close = st.columns(2)
@@ -297,7 +279,6 @@ if st.session_state.get("pure_listen_dialog_open", False):
                     st.session_state.pure_listen_dialog_open = False
                     st.session_state.pure_listen_finished = False
                     st.rerun()
-
         if not st.session_state.get("pure_listen_playing", False) and not st.session_state.get("pure_listen_finished", False):
             col_start, col_stop = st.columns(2)
             with col_start:
@@ -323,20 +304,17 @@ if st.session_state.get("pure_listen_dialog_open", False):
                 if st.button("✖ 关闭面板", use_container_width=True):
                     st.session_state.pure_listen_dialog_open = False
                     st.rerun()
-
         if st.session_state.get("pure_listen_playing", False):
             if st.button("⏹ 停止播放", use_container_width=True):
                 st.session_state.pure_listen_playing = False
                 st.session_state.pure_listen_finished = False
                 st.rerun()
-
         if st.session_state.get("pure_listen_playing", False):
             playlist = st.session_state.get("pure_listen_playlist", [])
             idx = st.session_state.get("pure_listen_index", 0)
             remain = st.session_state.get("pure_listen_remain_times", 0)
             interval_val = st.session_state.get("pure_listen_interval", 3)
             counter = st.session_state.get("pure_listen_counter", 0)
-
             if idx < len(playlist):
                 audio_file = playlist[idx]
                 with open(audio_file, "rb") as f:
@@ -367,5 +345,4 @@ if st.session_state.get("pure_listen_dialog_open", False):
                 st.session_state.pure_listen_playing = False
                 st.session_state.pure_listen_finished = True
                 st.rerun()
-
     pure_listen_dialog()
