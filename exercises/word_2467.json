@@ -1,0 +1,52 @@
+[
+  {
+    "question": "1. Fill in the blank: This __________ is known for its beautiful mountains and rivers.",
+    "type": "fill",
+    "options": [],
+    "answer": "area",
+    "chinese_translation": "填空题：这个地区以其美丽的山川而闻名。"
+  },
+  {
+    "question": "2. What is the correct meaning of the word 'area'?",
+    "type": "choice",
+    "options": [
+      "A. 动物",
+      "B. 面积,地区,领域",
+      "C. 交通工具",
+      "D. 天气"
+    ],
+    "answer": "B",
+    "chinese_translation": "选择题：单词 'area' 的正确含义是什么？"
+  },
+  {
+    "question": "3. Which sentence uses the word 'area' correctly?",
+    "type": "choice",
+    "options": [
+      "A. I forgot to area my homework yesterday.",
+      "B. This is a quiet area to study in.",
+      "C. Can you area the ball to me?",
+      "D. The area tastes delicious."
+    ],
+    "answer": "B",
+    "chinese_translation": "选择题：哪句话正确使用了 'area' 这个单词？"
+  },
+  {
+    "question": "4. Fill in the blank: The total __________ of the park is 500 square meters.",
+    "type": "fill",
+    "options": [],
+    "answer": "area",
+    "chinese_translation": "填空题：公园的总面积是500平方米。"
+  },
+  {
+    "question": "5. Choose the correct synonym for 'area' in the context of geography.",
+    "type": "choice",
+    "options": [
+      "A. Zone",
+      "B. Table",
+      "C. Pen",
+      "D. Chair"
+    ],
+    "answer": "A",
+    "chinese_translation": "选择题：在地理领域中，选出 'area' 的近义词。"
+  }
+]
