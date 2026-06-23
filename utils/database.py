@@ -1,4 +1,4 @@
-# utils/database.py
+# utils/database.py (full, corrected)
 import sqlite3
 import os
 import json
@@ -109,10 +109,7 @@ def save_note(word_id: int, content: str, recording_path: str = None):
 
 def get_settings():
     """
-    获取设置：
-    1. 优先从 Streamlit Secrets 读取（云端部署时）
-    2. 否则从本地 SQLite settings 表读取
-    3. 最后返回默认值
+    获取设置，优先级：Streamlit Secrets > 本地数据库 > 默认值
     """
     defaults = {
         "github_token": "",
@@ -122,15 +119,9 @@ def get_settings():
         "listen_interval": "3",
         "audio_scan_dir": str(_PROJECT_DIR / "audio_cache"),
     }
-    settings = {}
-    # 从 Streamlit Secrets 读取（云端部署生效）
-    try:
-        for key in defaults.keys():
-            if key in st.secrets:
-                settings[key] = st.secrets[key]
-    except Exception:
-        pass
-    # 从本地数据库读取（覆盖 Secrets 中未定义的键，或本地运行时使用）
+    # 1. 从默认值开始
+    settings = defaults.copy()
+    # 2. 从本地数据库读取（如果有）
     try:
         conn = get_connection()
         rows = conn.execute("SELECT key, value FROM settings").fetchall()
@@ -139,10 +130,14 @@ def get_settings():
         conn.close()
     except Exception:
         pass
-    # 用默认值填充缺失项
-    for key, default in defaults.items():
-        if key not in settings or not settings[key]:
-            settings[key] = default
+    # 3. 从Streamlit Secrets读取（覆盖数据库和默认值）
+    try:
+        for key in defaults.keys():
+            if key in st.secrets:
+                settings[key] = st.secrets[key]
+                # 云端只读，但仍需保留
+    except Exception:
+        pass
     return settings
 
 def set_setting(key: str, value: str):
