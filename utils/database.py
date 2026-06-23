@@ -99,8 +99,6 @@ def save_note(word_id: int, content: str, recording_path: str = None):
             )
             note_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
             change_type = "insert"
-
-        # 直接在同一连接中写入 change_log，避免 log_change 另开连接
         conn.execute(
             "INSERT INTO change_log (table_name, record_id, change_type) VALUES (?, ?, ?)",
             ("notes", note_id, change_type)
@@ -110,10 +108,42 @@ def save_note(word_id: int, content: str, recording_path: str = None):
         conn.close()
 
 def get_settings():
-    conn = get_connection()
-    rows = conn.execute("SELECT key, value FROM settings").fetchall()
-    conn.close()
-    return {row["key"]: row["value"] for row in rows}
+    """
+    获取设置：
+    1. 优先从 Streamlit Secrets 读取（云端部署时）
+    2. 否则从本地 SQLite settings 表读取
+    3. 最后返回默认值
+    """
+    defaults = {
+        "github_token": "",
+        "github_repo": "",
+        "audio_raw_base": "",
+        "dict_url": "https://dict.youdao.com/result?word={word}&lang=en",
+        "listen_interval": "3",
+        "audio_scan_dir": str(_PROJECT_DIR / "audio_cache"),
+    }
+    settings = {}
+    # 从 Streamlit Secrets 读取（云端部署生效）
+    try:
+        for key in defaults.keys():
+            if key in st.secrets:
+                settings[key] = st.secrets[key]
+    except Exception:
+        pass
+    # 从本地数据库读取（覆盖 Secrets 中未定义的键，或本地运行时使用）
+    try:
+        conn = get_connection()
+        rows = conn.execute("SELECT key, value FROM settings").fetchall()
+        for row in rows:
+            settings[row["key"]] = row["value"]
+        conn.close()
+    except Exception:
+        pass
+    # 用默认值填充缺失项
+    for key, default in defaults.items():
+        if key not in settings or not settings[key]:
+            settings[key] = default
+    return settings
 
 def set_setting(key: str, value: str):
     conn = get_connection()
