@@ -1,0 +1,50 @@
+[
+  {
+    "question": "Which month comes after March?",
+    "type": "choice",
+    "options": [
+      "January",
+      "April",
+      "May",
+      "June"
+    ],
+    "answer": "April",
+    "chinese_translation": "三月之后是哪个月份？"
+  },
+  {
+    "question": "Fill in the blank: ______ is the fourth month of the year.",
+    "type": "fill",
+    "options": [],
+    "answer": "April",
+    "chinese_translation": "填空：______ 是一年中的第四个月。"
+  },
+  {
+    "question": "What is the English word for the fourth month of the year?",
+    "type": "choice",
+    "options": [
+      "April",
+      "August",
+      "October",
+      "December"
+    ],
+    "answer": "April",
+    "chinese_translation": "用英语怎么表示一年中的第四个月？"
+  },
+  {
+    "question": "Fill in the blank: Many people celebrate Easter in ______.",
+    "type": "fill",
+    "options": [],
+    "answer": "April",
+    "chinese_translation": "填空：许多人在 ______ 庆祝复活节。"
+  },
+  {
+    "question": "True or False: April is the fifth month of the year.",
+    "type": "choice",
+    "options": [
+      "True",
+      "False"
+    ],
+    "answer": "False",
+    "chinese_translation": "判断对错：四月是一年中的第五个月。"
+  }
+]
