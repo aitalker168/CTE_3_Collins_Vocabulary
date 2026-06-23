@@ -14,23 +14,35 @@ st.title("⚙️ 设置")
 settings = db.get_settings()
 _AUDIO_CACHE_DIR = _project_root / "audio_cache"
 
-# ------------------ 凭据配置 ------------------
+# 检测是否在云端
+def is_cloud():
+    import os
+    return os.environ.get("IS_STREAMLIT_CLOUD", "false") == "true" or os.path.exists("/home/appuser")
+
+if is_cloud():
+    st.info("⚠️ 当前运行在云端，设置可能无法持久化保存。建议将以下配置添加到 Streamlit Cloud Secrets 中：\n\n"
+            "```toml\n"
+            "github_token = \"你的仓库操作Token\"\n"
+            "ai_github_token = \"你的AI专用Token\"\n"
+            "github_repo = \"aitalker168/CTE_3_Collins_Vocabulary\"\n"
+            "audio_raw_base = \"https://raw.githubusercontent.com/aitalker168/CTE_3_Collins_Vocabulary/main/audio_cache\"\n"
+            "```\n\n"
+            "如需修改，请在 Streamlit Cloud App 设置 → Secrets 中编辑。")
+
 st.markdown("### 🔑 凭据配置")
 
-# 仓库操作 Token（用于笔记同步、上传音频）
 github_token = st.text_input(
     "GitHub Token（用于仓库操作：笔记同步、上传音频）",
     value=settings.get("github_token", ""),
     type="password",
-    help="Classic Token 或 Fine-grained Token，需有 repo 和 contents: write 权限"
+    help="需有 repo 和 contents: write 权限"
 )
 
-# 新增：专用 AI Token（用于生成练习题）
 ai_github_token = st.text_input(
     "GitHub Token for AI（用于调用 GitHub Models 生成练习题）",
     value=settings.get("ai_github_token", ""),
     type="password",
-    help="Classic Token，只需 read:user 权限即可；或任何可调用 GitHub Models 的 Token"
+    help="Classic Token，只需 read:user 权限即可"
 )
 
 st.markdown("### 📦 GitHub 仓库配置")
@@ -39,7 +51,6 @@ github_repo = st.text_input(
     value=settings.get("github_repo", "")
 )
 
-# ------------------ 音频源 ------------------
 st.markdown("### 🔊 音频源")
 audio_raw_base = st.text_input(
     "GitHub raw 基础URL（用于云端播放）",
@@ -48,7 +59,6 @@ audio_raw_base = st.text_input(
 )
 st.caption("更换GitHub账户后修改此URL即可，无需改动代码。")
 
-# ------------------ 纯听模式音频文件夹 ------------------
 st.markdown("### 📁 纯听模式音频文件夹")
 current_audio_dir = settings.get("audio_scan_dir", str(_AUDIO_CACHE_DIR))
 audio_scan_dir = st.text_input(
@@ -57,21 +67,18 @@ audio_scan_dir = st.text_input(
 )
 st.caption("建议设置为 audio_cache 目录")
 
-# ------------------ 在线词典 ------------------
 st.markdown("### 📖 在线词典URL模板")
 dict_url = st.text_input(
     "词典查询URL（使用 {word} 作为单词占位符）",
     value=settings.get("dict_url", "https://dict.youdao.com/result?word={word}&lang=en")
 )
 
-# ------------------ 纯听间隔 ------------------
 st.markdown("### ⏱️ 纯听模式")
 listen_interval = st.number_input(
     "默认间隔（秒）", min_value=1, max_value=10,
     value=int(settings.get("listen_interval", "3"))
 )
 
-# ------------------ 缓存管理 ------------------
 st.markdown("### 🎵 缓存管理")
 col1, col2 = st.columns(2)
 with col1:
@@ -86,7 +93,6 @@ with col2:
                 shutil.rmtree(audio_cache)
                 st.success("音频缓存已清空")
 
-# ------------------ 导出笔记到新仓库 ------------------
 st.markdown("### 💾 导出笔记到新仓库")
 st.markdown("将本地所有笔记推送到另一个GitHub仓库（用于迁移）。")
 new_token = st.text_input("新仓库的Token", type="password", key="new_token")
@@ -113,13 +119,15 @@ if st.button("导出笔记"):
     else:
         st.error("请填写新仓库的Token和仓库名。")
 
-# ------------------ 保存按钮 ------------------
 if st.button("保存所有设置", type="primary"):
     db.set_setting("github_token", github_token)
-    db.set_setting("ai_github_token", ai_github_token)  # 新增
+    db.set_setting("ai_github_token", ai_github_token)
     db.set_setting("github_repo", github_repo)
     db.set_setting("audio_raw_base", audio_raw_base)
     db.set_setting("audio_scan_dir", audio_scan_dir)
     db.set_setting("dict_url", dict_url)
     db.set_setting("listen_interval", str(listen_interval))
-    st.success("设置已保存！")
+    if is_cloud():
+        st.warning("云端环境无法持久化保存，请将以上配置添加到 Streamlit Secrets 中（见页面顶部提示）。")
+    else:
+        st.success("设置已保存！")
