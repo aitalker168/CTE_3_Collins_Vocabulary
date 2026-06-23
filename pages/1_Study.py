@@ -1,3 +1,4 @@
+# pages/1_Study.py
 import streamlit as st
 import streamlit.components.v1 as components
 import json
@@ -201,45 +202,58 @@ for word in page_words:
                         url = dict_url.format(word=syn["synonym"])
                         st.markdown(f'<a href="{url}" target="_blank">打开词典</a>', unsafe_allow_html=True)
 
-        # ---------- 练习（关键修改：使用独立的 ai_github_token） ----------
+        # ---------- 练习（手动关闭模式） ----------
         col_ex = st.columns([1])
         with col_ex[0]:
-            if st.button(f"🧠 练习 - {word['word']}", key=f"ex_{word_id}"):
-                st.session_state[f"exercise_{word_id}"] = True
-        if st.session_state.get(f"exercise_{word_id}", False):
-            st.markdown("---")
-            # ⬇ 这里改为读取 ai_github_token（新字段）
-            ai_key = settings.get("ai_github_token", "")
-            if not ai_key:
-                st.warning("请先在设置页面配置 GitHub Token for AI（用于调用 GitHub Models 生成练习题）")
+            if st.session_state.get(f"exercise_{word_id}_show", False):
+                if st.button(f"✖ 关闭练习", key=f"ex_close_{word_id}"):
+                    st.session_state[f"exercise_{word_id}_show"] = False
+                    st.rerun()
             else:
-                with st.spinner("生成练习题..."):
-                    syn_words = [s["synonym"] for s in syns] if syns else []
-                    questions = ai.generate_exercises(word["word"], word.get("translation", ""), syn_words, ai_key)
-                if questions:
-                    # 显示题目时，增加中文翻译显示（如果 API 返回了翻译字段）
-                    for q in questions:
-                        chinese = q.get("chinese_translation", "")
-                        st.markdown(f"**{q.get('question','')}**")
-                        if chinese:
-                            st.markdown(f"*中文翻译：{chinese}*")
-                        if q.get("type") == "choice":
-                            for opt in q.get("options", []):
-                                st.markdown(f"- {opt}")
-                        st.info(f"答案：{q.get('answer','')}")
-                        st.divider()
-                    conn = db.get_connection()
-                    conn.execute("INSERT INTO exercises (word_id, question_json) VALUES (?, ?)",
-                                 (word_id, json.dumps(questions)))
-                    conn.commit()
-                    conn.close()
-                    gh_token = settings.get("github_token", "")
-                    gh_repo = settings.get("github_repo", "")
-                    if gh_token and gh_repo:
-                        with st.spinner("同步练习题到GitHub..."):
-                            ai.save_exercises_to_github(word_id, questions, gh_token, gh_repo)
-                    st.success("练习题已生成并保存")
-            st.session_state[f"exercise_{word_id}"] = False
+                if st.button(f"🧠 练习 - {word['word']}", key=f"ex_{word_id}"):
+                    st.session_state[f"exercise_{word_id}_show"] = True
+                    st.session_state[f"exercise_{word_id}_done"] = False
+                    st.rerun()
+
+        if st.session_state.get(f"exercise_{word_id}_show", False):
+            st.markdown("---")
+            if not st.session_state.get(f"exercise_{word_id}_done", False):
+                ai_key = settings.get("ai_github_token", "")
+                if not ai_key:
+                    st.warning("请先在设置页面配置 GitHub Token for AI（用于调用 GitHub Models 生成练习题）")
+                else:
+                    with st.spinner("生成练习题..."):
+                        syn_words = [s["synonym"] for s in syns] if syns else []
+                        questions = ai.generate_exercises(word["word"], word.get("translation", ""), syn_words, ai_key)
+                    if questions:
+                        for q in questions:
+                            chinese = q.get("chinese_translation", "")
+                            st.markdown(f"**{q.get('question','')}**")
+                            if chinese:
+                                st.markdown(f"*中文翻译：{chinese}*")
+                            if q.get("type") == "choice":
+                                for opt in q.get("options", []):
+                                    st.markdown(f"- {opt}")
+                            st.info(f"答案：{q.get('answer','')}")
+                            st.divider()
+                        conn = db.get_connection()
+                        conn.execute("INSERT INTO exercises (word_id, question_json) VALUES (?, ?)",
+                                     (word_id, json.dumps(questions)))
+                        conn.commit()
+                        conn.close()
+                        gh_token = settings.get("github_token", "")
+                        gh_repo = settings.get("github_repo", "")
+                        if gh_token and gh_repo:
+                            with st.spinner("同步练习题到GitHub..."):
+                                ai.save_exercises_to_github(word_id, questions, gh_token, gh_repo)
+                        st.success("练习题已生成并保存")
+                        st.session_state[f"exercise_{word_id}_done"] = True
+                    else:
+                        st.session_state[f"exercise_{word_id}_show"] = False
+            else:
+                if st.button("🔄 重新生成练习题", key=f"ex_regenerate_{word_id}"):
+                    st.session_state[f"exercise_{word_id}_done"] = False
+                    st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------- 纯听模式对话框 ----------
