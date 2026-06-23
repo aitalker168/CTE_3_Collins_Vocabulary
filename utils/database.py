@@ -110,10 +110,12 @@ def save_note(word_id: int, content: str, recording_path: str = None):
 def get_settings():
     """
     获取设置，优先级：Streamlit Secrets > 本地数据库 > 默认值
+    新增 ai_github_token 用于 AI 练习题生成
     """
     defaults = {
         "github_token": "",
         "github_repo": "",
+        "ai_github_token": "",  # 新增：专用于 AI 出题的 Token
         "audio_raw_base": "",
         "dict_url": "https://dict.youdao.com/result?word={word}&lang=en",
         "listen_interval": "3",
@@ -147,7 +149,7 @@ def set_setting(key: str, value: str):
 def sync_note_to_github(word_id: int, content: str, github_token: str, repo: str, word: str = None, branch: str = "main"):
     """
     将笔记内容通过GitHub API提交到仓库。
-    文件名改为 notes/{word}.html，而不是 word_{id}.html。
+    文件名改为 notes/{word}.html。
     """
     if not word:
         conn = get_connection()
@@ -156,7 +158,6 @@ def sync_note_to_github(word_id: int, content: str, github_token: str, repo: str
         if not row:
             return False, "Word not found"
         word = row["word"]
-    # 清理文件名中的非法字符
     safe_word = re.sub(r'[<>:"/\\|?*]', '_', word)
     safe_word = safe_word.replace(' ', '_')
     file_path = f"notes/{safe_word}.html"
