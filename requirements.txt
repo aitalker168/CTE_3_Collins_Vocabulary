@@ -1,0 +1,8 @@
+# requirements.txt
+streamlit>=1.36.0
+requests>=2.31.0
+Pillow>=10.0.0
+openai>=1.0.0
+# 以下为可选（录音转mp3需要，云端可忽略）
+pydub>=0.25.1
+# 如果需要在本地安装ffmpeg供pydub使用，请确保ffmpeg在PATH中

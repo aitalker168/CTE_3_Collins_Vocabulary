@@ -1,0 +1,71 @@
+<!-- 录音组件 -->
+<div id="audio-recorder-container">
+  <button id="start-rec-btn">🎙️ 开始录音</button>
+  <button id="stop-rec-btn" disabled>⏹ 停止</button>
+  <audio id="audio-playback" controls style="display:none;"></audio>
+  <span id="status-text" style="margin-left: 10px;"></span>
+</div>
+
+<script>
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let audioBlob = null;
+
+  const startBtn = document.getElementById('start-rec-btn');
+  const stopBtn = document.getElementById('stop-rec-btn');
+  const audioPlayback = document.getElementById('audio-playback');
+  const statusText = document.getElementById('status-text');
+
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    startBtn.addEventListener('click', async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        audioChunks = [];
+
+        mediaRecorder.addEventListener('dataavailable', event => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        });
+
+        mediaRecorder.addEventListener('stop', () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const audioUrl = URL.createObjectURL(audioBlob);
+          audioPlayback.src = audioUrl;
+          audioPlayback.style.display = 'block';
+          statusText.textContent = '录音完成，可播放。';
+          // 将音频数据传递给父页面（Streamlit）
+          // 需要将 blob 转换为 base64 或使用 FileReader
+          const reader = new FileReader();
+          reader.onloadend = function() {
+            const base64data = reader.result;
+            // 通过 postMessage 或自定义事件发送给 Streamlit
+            // 实际使用时通过 Streamlit.setComponentValue(base64data)
+          };
+          reader.readAsDataURL(audioBlob);
+          // 停止所有音轨
+          stream.getTracks().forEach(track => track.stop());
+        });
+
+        mediaRecorder.start();
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+        statusText.textContent = '录音中...';
+      } catch (err) {
+        statusText.textContent = '无法访问麦克风：' + err.message;
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+      }
+    });
+  } else {
+    statusText.textContent = '浏览器不支持录音功能。';
+    startBtn.disabled = true;
+  }
+</script>
