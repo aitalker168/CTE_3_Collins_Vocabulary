@@ -6,18 +6,17 @@ import streamlit as st
 from utils.database import get_connection
 
 # GitHub Models 的正确端点
-GITHUB_CHAT_COMPLETIONS_URL = "https://api.github.com/chat/completions"
-# 可用的模型（可根据需要调整）
+GITHUB_MODELS_BASE_URL = "https://models.inference.ai.azure.com"
+CHAT_COMPLETIONS_URL = f"{GITHUB_MODELS_BASE_URL}/v1/chat/completions"
 CHAT_MODEL = "gpt-4o"
 
 def generate_exercises(word: str, translation: str, synonyms: list,
                        github_token: str) -> list:
     """
     使用 GitHub Token 调用 GitHub Models 生成5道练习题。
-    要求 AI 同时输出中文翻译。
+    要求 AI 同时输出中文翻译和正确答案。
     """
     syn_text = "、".join(synonyms) if synonyms else "无"
-    # 增强 prompt，明确要求中文翻译和答案
     prompt = f"""你是一位英语词汇老师。请根据以下单词生成5道练习题（可以是填空或选择题），同时给出正确答案和中文翻译。
 单词：{word}
 中文释义：{translation}
@@ -41,8 +40,18 @@ def generate_exercises(word: str, translation: str, synonyms: list,
     }
 
     try:
-        resp = requests.post(GITHUB_CHAT_COMPLETIONS_URL,
+        resp = requests.post(CHAT_COMPLETIONS_URL,
                               headers=headers, json=payload, timeout=30)
+        # 如果返回401，给出详细指引
+        if resp.status_code == 401:
+            st.error(
+                "GitHub Models 认证失败。请确保你的 GitHub Token：\n"
+                "1. 是 Classic Token（或已启用 Fine-grained Token 的 'Models' 权限）\n"
+                "2. 已勾选 'read:user' 和 'repo' 权限\n"
+                "3. 未过期\n"
+                "您可以在 https://github.com/settings/tokens 重新生成 Token 并更新 Streamlit Secrets。"
+            )
+            return []
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"]
         # 尝试解析JSON（模型可能会返回markdown代码块）
