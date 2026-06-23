@@ -5,10 +5,10 @@ import base64
 import streamlit as st
 from utils.database import get_connection
 
-# GitHub Models 的正确端点
+# 正确的 GitHub Models 端点（不带 /v1/）
 GITHUB_MODELS_BASE_URL = "https://models.inference.ai.azure.com"
-CHAT_COMPLETIONS_URL = f"{GITHUB_MODELS_BASE_URL}/v1/chat/completions"
-CHAT_MODEL = "gpt-4o"
+CHAT_COMPLETIONS_URL = f"{GITHUB_MODELS_BASE_URL}/chat/completions"
+CHAT_MODEL = "gpt-4o"  # 也可以尝试 "gpt-4o-mini" 或其他模型
 
 def generate_exercises(word: str, translation: str, synonyms: list,
                        github_token: str) -> list:
@@ -42,14 +42,16 @@ def generate_exercises(word: str, translation: str, synonyms: list,
     try:
         resp = requests.post(CHAT_COMPLETIONS_URL,
                               headers=headers, json=payload, timeout=30)
-        # 如果返回401，给出详细指引
+        # 如果返回401或404，给出详细指引
         if resp.status_code == 401:
             st.error(
-                "GitHub Models 认证失败。请确保你的 GitHub Token：\n"
-                "1. 是 Classic Token（或已启用 Fine-grained Token 的 'Models' 权限）\n"
-                "2. 已勾选 'read:user' 和 'repo' 权限\n"
-                "3. 未过期\n"
-                "您可以在 https://github.com/settings/tokens 重新生成 Token 并更新 Streamlit Secrets。"
+                "GitHub Models 认证失败。请确保你的 Token 是 Classic Token 并已勾选 'read:user' 权限。"
+            )
+            return []
+        if resp.status_code == 404:
+            st.error(
+                "GitHub Models 端点未找到。请确认 URL 或稍后再试。当前使用："
+                f"{CHAT_COMPLETIONS_URL}"
             )
             return []
         resp.raise_for_status()
