@@ -1,0 +1,46 @@
+[
+  {
+    "question": "Fill in the blank: She always takes a walk ______ dinner.",
+    "type": "fill",
+    "options": [],
+    "answer": "after",
+    "chinese_translation": "填空：她总是在晚饭后散步。"
+  },
+  {
+    "question": "Which word best completes the sentence: 'I will call you ______ the meeting.'",
+    "type": "choice",
+    "options": [
+      "before",
+      "after",
+      "during",
+      "while"
+    ],
+    "answer": "after",
+    "chinese_translation": "选择题：哪个单词最适合填入句子中：'开会后我会打电话给你。'"
+  },
+  {
+    "question": "Translate the following sentence into English: '我们在放学后踢足球。'",
+    "type": "fill",
+    "options": [],
+    "answer": "We play football after school.",
+    "chinese_translation": "翻译：我们在放学后踢足球。"
+  },
+  {
+    "question": "Fill in the blank: He arrived at the party ______ everyone else.",
+    "type": "fill",
+    "options": [],
+    "answer": "after",
+    "chinese_translation": "填空：他在所有人之后才到达聚会。"
+  },
+  {
+    "question": "Choose the correct sentence:",
+    "type": "choice",
+    "options": [
+      "He goes to work after breakfast.",
+      "He goes to work before after breakfast.",
+      "He goes to work during after breakfast."
+    ],
+    "answer": "He goes to work after breakfast.",
+    "chinese_translation": "选择题：选择正确的句子。"
+  }
+]
