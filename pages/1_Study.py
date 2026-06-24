@@ -73,7 +73,7 @@ start_idx = (page - 1) * PAGE_SIZE
 end_idx = min(start_idx + PAGE_SIZE, total_words)
 page_words = words[start_idx:end_idx]
 
-# ========== 单词字体亮白色 ==========
+# ---------- 样式 ----------
 st.markdown("""
 <style>
 .vocab-card { background-color: #1a1f33; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; border: 1px solid #2a2f44; }
@@ -103,7 +103,17 @@ with col3:
 # ---------- 词汇卡片列表 ----------
 for word in page_words:
     word_id = word["word_id"]
-    syns = db.get_synonyms(word_id)
+    # 从数据库获取同义词（如果数据库有则优先使用）
+    db_syns = db.get_synonyms(word_id)
+    # 判断是否已有AI生成的同义词（存在session_state中）
+    session_syn_key = f"ai_synonyms_{word_id}"
+    if st.session_state.get(session_syn_key) is not None:
+        syns = st.session_state[session_syn_key][:2]  # 最多2个
+    elif db_syns:
+        syns = db_syns[:2]  # 使用数据库中的
+    else:
+        syns = []  # 空，等待生成
+
     note = db.get_note(word_id)
     with st.container():
         st.markdown(f'<div class="vocab-card">', unsafe_allow_html=True)
@@ -154,7 +164,7 @@ for word in page_words:
             else:
                 st.button("☁️", disabled=True, help="请先在设置中配置GitHub Token和仓库")
 
-        # ---------- 笔记区域（增加删除按钮） ----------
+        # ---------- 笔记区域 ----------
         if st.session_state.get(f"expand_note_{word_id}", False):
             st.markdown("---")
             note_content = note["content"] if note else ""
@@ -167,9 +177,7 @@ for word in page_words:
                     gh_token = settings.get("github_token", "")
                     gh_repo = settings.get("github_repo", "")
                     if gh_token and gh_repo:
-                        success, msg = db.sync_note_to_github(
-                            word_id, new_content, gh_token, gh_repo, word=word['word']
-                        )
+                        success, msg = db.sync_note_to_github(word_id, new_content, gh_token, gh_repo, word=word['word'])
                         if success:
                             st.success("笔记已保存并同步到GitHub")
                         else:
@@ -199,25 +207,57 @@ for word in page_words:
                 if rec_path.exists():
                     st.audio(str(rec_path), format="audio/mp3")
 
-        # ---------- 同义词 ----------
+        # ---------- 同义词区域（AI生成 + 数据库混合） ----------
+        st.markdown("**同义词**")
         if syns:
-            st.markdown("**同义词**")
-            for syn in syns:
-                c1, c2, c3, c4, c5 = st.columns([1.5, 1.5, 1.5, 0.5, 0.5])
-                with c1: st.markdown(f"<span class='syn-word'>{syn['synonym']}</span>", unsafe_allow_html=True)
-                with c2: st.markdown(f"<span style='color:#94a3b8'>{syn.get('phonetic','')}</span>", unsafe_allow_html=True)
-                with c3: st.markdown(f"<span>{syn.get('translation','')}</span>", unsafe_allow_html=True)
+            for idx, syn in enumerate(syns):
+                # 兼容数据库格式和AI生成格式
+                synonym_text = syn.get("synonym", syn.get("synonym", ""))
+                phonetic_text = syn.get("phonetic", syn.get("phonetic", ""))
+                pos_text = syn.get("part_of_speech", syn.get("part_of_speech", ""))
+                translation_text = syn.get("translation", syn.get("translation", ""))
+                syn_id = f"syn_{word_id}_{idx}"
+                c1, c2, c3, c4, c5, c6 = st.columns([1.5, 1.5, 1.5, 0.5, 0.5, 0.5])
+                with c1: st.markdown(f"<span class='syn-word'>{synonym_text}</span>", unsafe_allow_html=True)
+                with c2: st.markdown(f"<span style='color:#94a3b8'>{phonetic_text}</span>", unsafe_allow_html=True)
+                with c3: st.markdown(f"<span>{pos_text} {translation_text}</span>", unsafe_allow_html=True)
                 with c4:
-                    if st.button("🔊", key=f"syn_audio_{syn['syn_id']}"):
-                        audio_url = f"http://dict.youdao.com/dictvoice?audio={syn['synonym']}&type=1"
+                    if st.button("🔊", key=f"syn_audio_{syn_id}", help="发音"):
+                        audio_url = f"http://dict.youdao.com/dictvoice?audio={synonym_text}&type=1"
                         st.markdown(f'<audio src="{audio_url}" autoplay></audio>', unsafe_allow_html=True)
                 with c5:
-                    if st.button("🔗", key=f"syn_link_{syn['syn_id']}", help="查询在线词典"):
-                        dict_url = settings.get("dict_url", "https://dict.youdao.com/result?word={word}&lang=en")
-                        url = dict_url.format(word=syn["synonym"])
-                        st.markdown(f'<a href="{url}" target="_blank">打开词典</a>', unsafe_allow_html=True)
+                    gh_token = settings.get("github_token", "")
+                    gh_repo = settings.get("github_repo", "")
+                    if gh_token and gh_repo:
+                        if st.button("☁️", key=f"syn_up_{syn_id}", help="上传同义词音频到GitHub"):
+                            success = au.upload_audio_to_github(synonym_text, word['level'], gh_token, gh_repo)
+                            if success:
+                                st.success(f"已上传 {synonym_text}.mp3")
+                            else:
+                                st.error("上传失败")
+                    else:
+                        st.button("☁️", disabled=True)
+                with c6:
+                    dict_url = settings.get("dict_url", "https://dict.youdao.com/result?word={word}&lang=en")
+                    url = dict_url.format(word=synonym_text)
+                    st.markdown(f'<a href="{url}" target="_blank">🔗</a>', unsafe_allow_html=True)
+        else:
+            # 没有同义词时，提供生成按钮
+            st.markdown("*暂无同义词*")
+            if st.button("🤖 生成同义词", key=f"gen_syn_{word_id}"):
+                ai_key = settings.get("ai_github_token", "")
+                if ai_key:
+                    with st.spinner("正在生成同义词..."):
+                        generated = ai.generate_synonyms(word['word'], word.get('translation',''), ai_key)
+                        if generated:
+                            st.session_state[session_syn_key] = generated
+                            st.rerun()
+                        else:
+                            st.info("未找到合适的同义词。")
+                else:
+                    st.warning("请先在设置页面配置AI Token。")
 
-        # ---------- 练习（修改：题目持久化在 session_state 中） ----------
+        # ---------- 练习（逐题显示，5题，难度递增） ----------
         col_ex = st.columns([1])
         with col_ex[0]:
             if st.session_state.get(f"exercise_{word_id}_show", False):
@@ -226,75 +266,76 @@ for word in page_words:
                     st.session_state[f"exercise_{word_id}_done"] = False
                     if f"exercise_{word_id}_questions" in st.session_state:
                         del st.session_state[f"exercise_{word_id}_questions"]
+                        del st.session_state[f"exercise_{word_id}_q_index"]
                     st.rerun()
             else:
                 if st.button(f"🧠 练习 - {word['word']}", key=f"ex_{word_id}"):
                     st.session_state[f"exercise_{word_id}_show"] = True
                     st.session_state[f"exercise_{word_id}_done"] = False
+                    st.session_state[f"exercise_{word_id}_q_index"] = 0
                     st.rerun()
 
         if st.session_state.get(f"exercise_{word_id}_show", False):
             st.markdown("---")
-            # 如果已经生成且保存在 session_state 中，直接显示
             if st.session_state.get(f"exercise_{word_id}_done", False) and \
                st.session_state.get(f"exercise_{word_id}_questions") is not None:
                 questions = st.session_state[f"exercise_{word_id}_questions"]
-                for q in questions:
+                q_index = st.session_state.get(f"exercise_{word_id}_q_index", 0)
+                total_q = len(questions)
+                if q_index < total_q:
+                    q = questions[q_index]
                     chinese = q.get("chinese_translation", "")
-                    st.markdown(f"**{q.get('question','')}**")
+                    st.markdown(f"**第 {q_index+1}/{total_q} 题：{q.get('question','')}**")
                     if chinese:
                         st.markdown(f"*中文翻译：{chinese}*")
                     if q.get("type") == "choice":
                         for opt in q.get("options", []):
                             st.markdown(f"- {opt}")
                     st.info(f"答案：{q.get('answer','')}")
-                    st.divider()
-                if st.button("🔄 重新生成练习题", key=f"ex_regenerate_{word_id}"):
-                    st.session_state[f"exercise_{word_id}_done"] = False
-                    st.rerun()
+                    col_next_btn, _ = st.columns([1, 4])
+                    with col_next_btn:
+                        if q_index < total_q - 1:
+                            if st.button("➡️ 下一题", key=f"ex_next_{word_id}_{q_index}"):
+                                st.session_state[f"exercise_{word_id}_q_index"] = q_index + 1
+                                st.rerun()
+                        else:
+                            st.success("🎉 已全部完成！")
+                else:
+                    st.success("🎉 已完成全部5道题！")
+                    if st.button("🔄 重新生成", key=f"ex_redo_{word_id}"):
+                        st.session_state[f"exercise_{word_id}_done"] = False
+                        st.rerun()
             else:
-                # 生成题目
                 ai_key = settings.get("ai_github_token", "")
                 if not ai_key:
                     st.warning("请先在设置页面配置 GitHub Token for AI（用于调用 GitHub Models 生成练习题）")
                 else:
                     with st.spinner("生成练习题..."):
-                        syn_words = [s["synonym"] for s in syns] if syns else []
-                        questions = ai.generate_exercises(word["word"], word.get("translation", ""), syn_words, ai_key)
+                        # 传入已有的同义词列表（用于prompt）
+                        existing_syns = [s.get("synonym", "") for s in syns] if syns else []
+                        questions = ai.generate_exercises(word["word"], word.get("translation", ""), existing_syns, ai_key)
                     if questions:
-                        # 显示题目
-                        for q in questions:
-                            chinese = q.get("chinese_translation", "")
-                            st.markdown(f"**{q.get('question','')}**")
-                            if chinese:
-                                st.markdown(f"*中文翻译：{chinese}*")
-                            if q.get("type") == "choice":
-                                for opt in q.get("options", []):
-                                    st.markdown(f"- {opt}")
-                            st.info(f"答案：{q.get('answer','')}")
-                            st.divider()
-                        # 保存到数据库
                         conn = db.get_connection()
                         conn.execute("INSERT INTO exercises (word_id, question_json) VALUES (?, ?)",
                                      (word_id, json.dumps(questions)))
                         conn.commit()
                         conn.close()
-                        # 同步到GitHub
                         gh_token = settings.get("github_token", "")
                         gh_repo = settings.get("github_repo", "")
                         if gh_token and gh_repo:
                             with st.spinner("同步练习题到GitHub..."):
                                 ai.save_exercises_to_github(word_id, questions, gh_token, gh_repo)
-                        # 保存到 session_state
                         st.session_state[f"exercise_{word_id}_questions"] = questions
                         st.session_state[f"exercise_{word_id}_done"] = True
+                        st.session_state[f"exercise_{word_id}_q_index"] = 0
                         st.success("练习题已生成并保存")
+                        st.rerun()
                     else:
                         st.session_state[f"exercise_{word_id}_show"] = False
                         st.error("生成练习题失败，请检查AI Token或网络")
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ---------- 纯听模式对话框 ----------
+# ---------- 纯听模式对话框（保持不变） ----------
 if st.session_state.get("pure_listen_dialog_open", False):
     @st.dialog("🎧 纯听控制面板")
     def pure_listen_dialog():
