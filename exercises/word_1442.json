@@ -1,0 +1,52 @@
+[
+  {
+    "question": "What does the acronym 'AIDS' stand for?",
+    "type": "choice",
+    "options": [
+      "A. Acquired Immune Deficiency Syndrome",
+      "B. Acute Infectious Disease Syndrome",
+      "C. Auto Immune Deficiency System",
+      "D. Advanced Immune Disorder Syndrome"
+    ],
+    "answer": "A",
+    "chinese_translation": "AIDS 的缩写代表什么？\nA. 获得性免疫缺损综合症\nB. 急性传染病综合症\nC. 自身免疫缺损系统\nD. 先进免疫障碍综合症\n正确答案：A"
+  },
+  {
+    "question": "AIDS is caused by a virus called ______.",
+    "type": "fill",
+    "options": [],
+    "answer": "HIV",
+    "chinese_translation": "AIDS 是由一种名为______的病毒引起的。\n正确答案：HIV"
+  },
+  {
+    "question": "Choose the correct statement about AIDS:",
+    "type": "choice",
+    "options": [
+      "A. AIDS can be cured with antibiotics.",
+      "B. AIDS is a genetic disorder.",
+      "C. AIDS is a condition that weakens the immune system.",
+      "D. AIDS spreads through casual contact like shaking hands."
+    ],
+    "answer": "C",
+    "chinese_translation": "选择关于 AIDS 的正确陈述：\nA. AIDS 可以用抗生素治愈。\nB. AIDS 是一种遗传性疾病。\nC. AIDS 是一种削弱免疫系统的疾病。\nD. AIDS 通过握手等日常接触传播。\n正确答案：C"
+  },
+  {
+    "question": "Fill in the blank: People with ______ are more vulnerable to infections because their immune system is weakened.",
+    "type": "fill",
+    "options": [],
+    "answer": "AIDS",
+    "chinese_translation": "填空：患有______的人更容易受到感染，因为他们的免疫系统已经被削弱。\n正确答案：AIDS"
+  },
+  {
+    "question": "Which of the following is NOT a way AIDS is transmitted?",
+    "type": "choice",
+    "options": [
+      "A. Sharing needles",
+      "B. Blood transfusion with infected blood",
+      "C. Hugging an infected person",
+      "D. Unprotected sexual contact"
+    ],
+    "answer": "C",
+    "chinese_translation": "以下哪种方式不是 AIDS 的传播途径？\nA. 共用针头\nB. 输注感染的血液\nC. 拥抱感染者\nD. 无保护的性接触\n正确答案：C"
+  }
+]
