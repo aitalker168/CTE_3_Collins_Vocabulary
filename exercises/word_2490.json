@@ -1,52 +1,52 @@
 [
   {
-    "question": "Fill in the blank with the correct form of the word 'begin': The meeting will ______ at 10 a.m. sharp.",
+    "question": "1. What is the meaning of the word 'begin'?",
+    "type": "choice",
+    "options": [
+      "A. 停止",
+      "B. 开始",
+      "C. 结束",
+      "D. 放弃"
+    ],
+    "answer": "B",
+    "chinese_translation": "1. 单词 'begin' 的意思是什么？"
+  },
+  {
+    "question": "2. Fill in the blank: She decided to ______ her new job on Monday.",
     "type": "fill",
     "options": [],
     "answer": "begin",
-    "chinese_translation": "会议将于上午10点准时开始。"
+    "chinese_translation": "2. 填空：她决定周一开始她的新工作。"
   },
   {
-    "question": "What is the past tense form of 'begin'?",
+    "question": "3. Which of the following is a synonym of 'begin'?",
     "type": "choice",
     "options": [
-      "A. begun",
-      "B. began",
-      "C. begin",
-      "D. beginning"
+      "A. End",
+      "B. Start",
+      "C. Pause",
+      "D. Stop"
     ],
-    "answer": "B. began",
-    "chinese_translation": "'begin'的过去式是什么？"
+    "answer": "B",
+    "chinese_translation": "3. 以下哪个是 'begin' 的同义词？"
   },
   {
-    "question": "Choose the correct sentence:",
-    "type": "choice",
-    "options": [
-      "A. She begin to cry after hearing the news.",
-      "B. She begins to cry after hearing the news.",
-      "C. She began to cry after hearing the news.",
-      "D. She beginning to cry after hearing the news."
-    ],
-    "answer": "C. She began to cry after hearing the news.",
-    "chinese_translation": "选择正确的句子："
-  },
-  {
-    "question": "Fill in the blank: They have already ______ the project, so it's too late to change the plan.",
+    "question": "4. Fill in the blank with the correct tense: They ______ the meeting an hour ago.",
     "type": "fill",
     "options": [],
-    "answer": "begun",
-    "chinese_translation": "他们已经开始这个项目了，所以现在改变计划为时已晚。"
+    "answer": "began",
+    "chinese_translation": "4. 用正确的时态填空：他们一个小时前开始了会议。"
   },
   {
-    "question": "Choose the sentence where 'begin' is used in the correct tense:",
+    "question": "5. Choose the sentence where 'begin' is used correctly:",
     "type": "choice",
     "options": [
-      "A. He begin to work early every day.",
-      "B. She will begin her new job next week.",
-      "C. They has begun the construction yesterday.",
-      "D. We beginning our journey tomorrow."
+      "A. He begin to work on his project yesterday.",
+      "B. She begins her day by drinking coffee every morning.",
+      "C. They have begin the construction already.",
+      "D. I will begun writing my essay soon."
     ],
-    "answer": "B. She will begin her new job next week.",
-    "chinese_translation": "选择一个使用了正确时态的句子："
+    "answer": "B",
+    "chinese_translation": "5. 选择一个 'begin' 使用正确的句子："
   }
 ]
