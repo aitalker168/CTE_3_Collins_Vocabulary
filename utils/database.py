@@ -1,4 +1,3 @@
-# utils/database.py
 import sqlite3
 import os
 import json
@@ -108,9 +107,6 @@ def save_note(word_id: int, content: str, recording_path: str = None):
         conn.close()
 
 def get_settings():
-    """
-    获取设置，优先级：Streamlit Secrets > 本地数据库 > 默认值
-    """
     defaults = {
         "github_token": "",
         "github_repo": "",
@@ -121,7 +117,6 @@ def get_settings():
         "audio_scan_dir": str(_PROJECT_DIR / "audio_cache"),
     }
     settings = defaults.copy()
-    # 从本地数据库读取
     try:
         conn = get_connection()
         rows = conn.execute("SELECT key, value FROM settings").fetchall()
@@ -130,7 +125,6 @@ def get_settings():
         conn.close()
     except Exception:
         pass
-    # 从Streamlit Secrets读取（覆盖数据库和默认值）
     try:
         for key in defaults.keys():
             if key in st.secrets:
@@ -176,6 +170,50 @@ def sync_note_to_github(word_id: int, content: str, github_token: str, repo: str
         conn.execute("UPDATE notes SET github_sha = ? WHERE word_id = ?", (new_sha, word_id))
         conn.commit()
         conn.close()
+        return True, ""
+    else:
+        return False, r.json().get("message", "Unknown error")
+
+# ---------- 新增：删除笔记本地和GitHub ----------
+def delete_note(word_id: int):
+    """删除本地数据库中的笔记记录"""
+    conn = get_connection()
+    try:
+        conn.execute("DELETE FROM notes WHERE word_id = ?", (word_id,))
+        conn.execute("INSERT INTO change_log (table_name, record_id, change_type) VALUES ('notes', ?, 'delete')",
+                     (word_id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+def delete_note_from_github(word_id: int, github_token: str, repo: str, word: str = None, branch: str = "main"):
+    """通过GitHub API删除 notes/{word}.html 文件"""
+    if not word:
+        conn = get_connection()
+        row = conn.execute("SELECT word FROM words WHERE word_id = ?", (word_id,)).fetchone()
+        conn.close()
+        if not row:
+            return False, "Word not found"
+        word = row["word"]
+    safe_word = re.sub(r'[<>:"/\\|?*]', '_', word)
+    safe_word = safe_word.replace(' ', '_')
+    file_path = f"notes/{safe_word}.html"
+    url = f"https://api.github.com/repos/{repo}/contents/{file_path}"
+    headers = {"Authorization": f"token {github_token}"}
+    # 获取文件SHA
+    r = requests.get(url, headers=headers)
+    if r.status_code == 404:
+        return True, "File already deleted"
+    if r.status_code != 200:
+        return False, f"Failed to get file: {r.json().get('message', '')}"
+    sha = r.json().get("sha")
+    data = {
+        "message": f"Delete note for {word}",
+        "sha": sha,
+        "branch": branch
+    }
+    r = requests.delete(url, headers=headers, json=data)
+    if r.status_code in (200, 204):
         return True, ""
     else:
         return False, r.json().get("message", "Unknown error")
