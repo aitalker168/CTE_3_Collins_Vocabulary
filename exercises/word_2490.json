@@ -1,0 +1,47 @@
+[
+  {
+    "question": "1. The meeting will _____ at 10 a.m. sharp.",
+    "type": "fill",
+    "options": [],
+    "answer": "begin",
+    "chinese_translation": "会议将在上午10点准时开始。"
+  },
+  {
+    "question": "2. Which of the following words has the same meaning as 'start'?",
+    "type": "choice",
+    "options": [
+      "A. Stop",
+      "B. End",
+      "C. Begin",
+      "D. Pause"
+    ],
+    "answer": "C. Begin",
+    "chinese_translation": "以下哪个单词与“start”（开始）意思相同？"
+  },
+  {
+    "question": "3. Let's _____ our English lesson now.",
+    "type": "fill",
+    "options": [],
+    "answer": "begin",
+    "chinese_translation": "让我们现在开始上英语课吧。"
+  },
+  {
+    "question": "4. The movie is about to _____. Please take your seats.",
+    "type": "fill",
+    "options": [],
+    "answer": "begin",
+    "chinese_translation": "电影即将开始。请就座。"
+  },
+  {
+    "question": "5. Choose the correct sentence:",
+    "type": "choice",
+    "options": [
+      "A. I will begin my homework after dinner.",
+      "B. I will begin my homework during sleep.",
+      "C. I will begin my homework yesterday.",
+      "D. I will begin my homework after it ends."
+    ],
+    "answer": "A. I will begin my homework after dinner.",
+    "chinese_translation": "选择正确的句子："
+  }
+]
