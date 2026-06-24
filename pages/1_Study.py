@@ -1,4 +1,3 @@
-# pages/1_Study.py
 import streamlit as st
 import streamlit.components.v1 as components
 import json
@@ -74,10 +73,11 @@ start_idx = (page - 1) * PAGE_SIZE
 end_idx = min(start_idx + PAGE_SIZE, total_words)
 page_words = words[start_idx:end_idx]
 
+# ========== 单词字体亮白色 ==========
 st.markdown("""
 <style>
 .vocab-card { background-color: #1a1f33; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; border: 1px solid #2a2f44; }
-.main-word { font-size: 1.3rem; font-weight: bold; color: #e2e8f0; }
+.main-word { font-size: 1.5rem; font-weight: bold; color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
 .pos-tag { background-color: #2563eb; color: white; padding: 0.1rem 0.4rem; border-radius: 4px; font-size: 0.7rem; margin-left: 0.5rem; }
 .syn-word { color: #93c5fd; }
 </style>
@@ -107,7 +107,7 @@ for word in page_words:
     note = db.get_note(word_id)
     with st.container():
         st.markdown(f'<div class="vocab-card">', unsafe_allow_html=True)
-        cols1 = st.columns([0.3, 1.5, 0.5, 0.7, 0.3, 0.3, 0.3, 0.3, 0.3])
+        cols1 = st.columns([0.3, 1.8, 0.5, 0.7, 0.3, 0.3, 0.3, 0.3, 0.3])
         with cols1[0]:
             st.markdown(f"<span style='color:#94a3b8'>{word.get('word_id','')}</span>", unsafe_allow_html=True)
         with cols1[1]:
@@ -154,13 +154,13 @@ for word in page_words:
             else:
                 st.button("☁️", disabled=True, help="请先在设置中配置GitHub Token和仓库")
 
-        # ---------- 笔记区域 ----------
+        # ---------- 笔记区域（增加删除按钮） ----------
         if st.session_state.get(f"expand_note_{word_id}", False):
             st.markdown("---")
             note_content = note["content"] if note else ""
             st.markdown("**我的笔记**")
             new_content = st.text_area("编辑笔记", value=note_content, height=100, key=f"text_{word_id}")
-            col_save, col_rec = st.columns([1, 1])
+            col_save, col_del, col_rec = st.columns([1, 1, 1])
             with col_save:
                 if st.button("保存笔记", key=f"save_{word_id}"):
                     db.save_note(word_id, new_content)
@@ -176,6 +176,21 @@ for word in page_words:
                             st.warning(f"笔记已本地保存，GitHub同步失败：{msg}")
                     else:
                         st.success("笔记已保存（本地）。如需同步到GitHub，请在Secrets中配置github_token和github_repo。")
+            with col_del:
+                if st.button("🗑️ 删除笔记", key=f"del_{word_id}"):
+                    db.delete_note(word_id)
+                    gh_token = settings.get("github_token", "")
+                    gh_repo = settings.get("github_repo", "")
+                    if gh_token and gh_repo:
+                        success, msg = db.delete_note_from_github(word_id, gh_token, gh_repo, word=word['word'])
+                        if success:
+                            st.success("笔记已删除并同步到GitHub")
+                        else:
+                            st.warning(f"本地笔记已删除，但GitHub同步失败：{msg}")
+                    else:
+                        st.success("笔记已删除（本地）")
+                    st.session_state[f"expand_note_{word_id}"] = False
+                    st.rerun()
             with col_rec:
                 if st.button("🎙️ 录音", key=f"rec_{word_id}"):
                     st.warning("录音功能仅在本地运行可用（云端不支持）")
@@ -202,12 +217,15 @@ for word in page_words:
                         url = dict_url.format(word=syn["synonym"])
                         st.markdown(f'<a href="{url}" target="_blank">打开词典</a>', unsafe_allow_html=True)
 
-        # ---------- 练习（手动关闭模式） ----------
+        # ---------- 练习（修改：题目持久化在 session_state 中） ----------
         col_ex = st.columns([1])
         with col_ex[0]:
             if st.session_state.get(f"exercise_{word_id}_show", False):
                 if st.button(f"✖ 关闭练习", key=f"ex_close_{word_id}"):
                     st.session_state[f"exercise_{word_id}_show"] = False
+                    st.session_state[f"exercise_{word_id}_done"] = False
+                    if f"exercise_{word_id}_questions" in st.session_state:
+                        del st.session_state[f"exercise_{word_id}_questions"]
                     st.rerun()
             else:
                 if st.button(f"🧠 练习 - {word['word']}", key=f"ex_{word_id}"):
@@ -217,7 +235,25 @@ for word in page_words:
 
         if st.session_state.get(f"exercise_{word_id}_show", False):
             st.markdown("---")
-            if not st.session_state.get(f"exercise_{word_id}_done", False):
+            # 如果已经生成且保存在 session_state 中，直接显示
+            if st.session_state.get(f"exercise_{word_id}_done", False) and \
+               st.session_state.get(f"exercise_{word_id}_questions") is not None:
+                questions = st.session_state[f"exercise_{word_id}_questions"]
+                for q in questions:
+                    chinese = q.get("chinese_translation", "")
+                    st.markdown(f"**{q.get('question','')}**")
+                    if chinese:
+                        st.markdown(f"*中文翻译：{chinese}*")
+                    if q.get("type") == "choice":
+                        for opt in q.get("options", []):
+                            st.markdown(f"- {opt}")
+                    st.info(f"答案：{q.get('answer','')}")
+                    st.divider()
+                if st.button("🔄 重新生成练习题", key=f"ex_regenerate_{word_id}"):
+                    st.session_state[f"exercise_{word_id}_done"] = False
+                    st.rerun()
+            else:
+                # 生成题目
                 ai_key = settings.get("ai_github_token", "")
                 if not ai_key:
                     st.warning("请先在设置页面配置 GitHub Token for AI（用于调用 GitHub Models 生成练习题）")
@@ -226,6 +262,7 @@ for word in page_words:
                         syn_words = [s["synonym"] for s in syns] if syns else []
                         questions = ai.generate_exercises(word["word"], word.get("translation", ""), syn_words, ai_key)
                     if questions:
+                        # 显示题目
                         for q in questions:
                             chinese = q.get("chinese_translation", "")
                             st.markdown(f"**{q.get('question','')}**")
@@ -236,24 +273,25 @@ for word in page_words:
                                     st.markdown(f"- {opt}")
                             st.info(f"答案：{q.get('answer','')}")
                             st.divider()
+                        # 保存到数据库
                         conn = db.get_connection()
                         conn.execute("INSERT INTO exercises (word_id, question_json) VALUES (?, ?)",
                                      (word_id, json.dumps(questions)))
                         conn.commit()
                         conn.close()
+                        # 同步到GitHub
                         gh_token = settings.get("github_token", "")
                         gh_repo = settings.get("github_repo", "")
                         if gh_token and gh_repo:
                             with st.spinner("同步练习题到GitHub..."):
                                 ai.save_exercises_to_github(word_id, questions, gh_token, gh_repo)
-                        st.success("练习题已生成并保存")
+                        # 保存到 session_state
+                        st.session_state[f"exercise_{word_id}_questions"] = questions
                         st.session_state[f"exercise_{word_id}_done"] = True
+                        st.success("练习题已生成并保存")
                     else:
                         st.session_state[f"exercise_{word_id}_show"] = False
-            else:
-                if st.button("🔄 重新生成练习题", key=f"ex_regenerate_{word_id}"):
-                    st.session_state[f"exercise_{word_id}_done"] = False
-                    st.rerun()
+                        st.error("生成练习题失败，请检查AI Token或网络")
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ---------- 纯听模式对话框 ----------
